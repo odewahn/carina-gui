@@ -43,9 +43,10 @@ func gui() {
 	mainGrid := ui.NewGrid()
 	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
 	mainGrid.Add(clusterGrp, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 1, 4)
-	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
-	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
-	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.SetPadded(true)
 
 	//mainStack := ui.NewVerticalStack(loginGrp, clusterGrp)
 	//mainStack.SetStretchy(0)
