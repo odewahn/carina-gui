@@ -40,12 +40,19 @@ func gui() {
 	loginGrp.SetMargined(true)
 	clusterGrp := ui.NewGroup("Cluster Information", ui.Space())
 
-	mainStack := ui.NewVerticalStack(loginGrp, clusterGrp)
-	mainStack.SetStretchy(0)
-	mainStack.SetStretchy(1)
+	mainGrid := ui.NewGrid()
+	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.Add(clusterGrp, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 1, 4)
+	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+
+	//mainStack := ui.NewVerticalStack(loginGrp, clusterGrp)
+	//mainStack.SetStretchy(0)
+	//mainStack.SetStretchy(1)
 
 	//Main stack of the interfaces
-	w = ui.NewWindow("Carina by Rackspace GUI Client", 600, 450, mainStack)
+	w = ui.NewWindow("Carina by Rackspace GUI Client", 600, 450, mainGrid)
 	w.SetMargined(true)
 
 	w.OnClosing(func() bool {
