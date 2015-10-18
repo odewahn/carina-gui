@@ -3,16 +3,28 @@ package main
 import (
 	"log"
 	"os"
+	"reflect"
+	"time"
 
 	"github.com/andlabs/ui"
+	"github.com/rackerlabs/libcarina"
 )
 
 var (
-	w ui.Window
+	w            ui.Window
+	carinaClient *libcarina.ClusterClient
 )
 
 func gui() {
 
+	//Define endpoint
+	apiEndpointLabel := ui.NewLabel("API Endpoint:")
+	apiEndpointTextField := ui.NewTextField()
+	if len(os.Getenv("RACKSPACE_API_ENDPOINT")) > 0 {
+		apiEndpointTextField.SetText(os.Getenv("RACKSPACE_API_ENDPOINT"))
+	} else {
+		apiEndpointTextField.SetText(libcarina.BetaEndpoint)
+	}
 	//Define credentials area
 	usernameLabel := ui.NewLabel("Username:")
 	usernameTextField := ui.NewTextField()
@@ -28,29 +40,29 @@ func gui() {
 
 	// layout the login controls on a grid
 	loginGrid := ui.NewGrid()
-	loginGrid.Add(usernameLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	loginGrid.Add(apiEndpointLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	loginGrid.Add(apiEndpointTextField, apiEndpointLabel, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	loginGrid.Add(usernameLabel, apiEndpointLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
 	loginGrid.Add(usernameTextField, usernameLabel, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
 	loginGrid.Add(apiKeyLabel, usernameLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
 	loginGrid.Add(apiKeyTextField, apiKeyLabel, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
 	loginGrid.Add(connectBtn, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
 	loginGrid.SetPadded(true)
 
-	//Define main interface
-	loginGrp := ui.NewGroup("Rackspace Credentials", loginGrid)
-	loginGrp.SetMargined(true)
-	clusterGrp := ui.NewGroup("Cluster Information", ui.Space())
+	// Define the table that lists all running clusters
+	var c libcarina.Cluster
+	clusterListTable := ui.NewTable(reflect.TypeOf(c))
 
 	mainGrid := ui.NewGrid()
 	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
-	mainGrid.Add(clusterGrp, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 1, 4)
-	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
-	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
-	//mainGrid.Add(ui.Space(), clusterGrp, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.Add(clusterListTable, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
 	mainGrid.SetPadded(true)
 
-	//mainStack := ui.NewVerticalStack(loginGrp, clusterGrp)
-	//mainStack.SetStretchy(0)
-	//mainStack.SetStretchy(1)
+	connectBtn.OnClicked(func() {
+		connect(apiEndpointTextField.Text(), usernameTextField.Text(), apiKeyTextField.Text())
+		go monitorClusterList(clusterListTable)
+
+	})
 
 	//Main stack of the interfaces
 	w = ui.NewWindow("Carina by Rackspace GUI Client", 600, 450, mainGrid)
@@ -64,17 +76,27 @@ func gui() {
 
 }
 
-/*
-func updateTable(table ui.Table) {
+// Set up global connection to the cluster
+func connect(endpoint, username, apiKey string) {
+	// Connect to Carina
+	var err error
+	carinaClient, err = libcarina.NewClusterClient(endpoint, username, apiKey)
+	if err != nil {
+		log.Fatal("Cannot create cluster client: ", err)
+	}
+}
+
+// monitor the carina client
+func monitorClusterList(t ui.Table) {
 	for {
-		table.Lock()
-		d := table.Data().(*[]Container)
-		*d = running
-		table.Unlock()
+		clusters, _ := carinaClient.List()
+		t.Lock()
+		d := t.Data().(*[]libcarina.Cluster)
+		*d = clusters
+		t.Unlock()
 		time.Sleep(1 * time.Second)
 	}
 }
-*/
 
 func main() {
 
