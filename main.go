@@ -18,6 +18,8 @@ var (
 	loggedInFlag bool
 )
 
+const VERSION string = "0.1.0"
+
 func gui() {
 
 	//Define endpoint
@@ -117,7 +119,7 @@ func gui() {
 	})
 
 	//Main stack of the interfaces
-	w = ui.NewWindow("Carina by Rackspace GUI Client", 620, 300, mainGrid)
+	w = ui.NewWindow("Carina by Rackspace GUI Client ("+VERSION+")", 620, 300, mainGrid)
 	w.SetMargined(true)
 
 	w.OnClosing(func() bool {
