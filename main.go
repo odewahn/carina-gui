@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/andlabs/ui"
@@ -13,6 +15,7 @@ import (
 var (
 	w            ui.Window
 	carinaClient *libcarina.ClusterClient
+	loggedInFlag bool
 )
 
 func gui() {
@@ -49,7 +52,7 @@ func gui() {
 	loginGrid.Add(connectBtn, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
 	loginGrid.SetPadded(true)
 
-	//div grp
+	//div grp1
 	divGrp1 := ui.NewGroup("", ui.Space())
 	divGrp1.SetMargined(true)
 
@@ -78,11 +81,43 @@ func gui() {
 	})
 
 	newBtn.OnClicked(func() {
-		newCluster()
+		if loggedInFlag {
+			newCluster()
+		}
+	})
+
+	deleteBtn.OnClicked(func() {
+		c, found := getSelectedCluster(clusterListTable)
+		if found {
+			carinaClient.Delete(c.ClusterName)
+			fmt.Println("Deleting", c.ClusterName)
+		}
+	})
+
+	rebuildBtn.OnClicked(func() {
+		c, found := getSelectedCluster(clusterListTable)
+		if found {
+			fmt.Println("Rebuiding", c.ClusterName)
+			carinaClient.Rebuild(c.ClusterName)
+		}
+	})
+
+	credentialsBtn.OnClicked(func() {
+		c, found := getSelectedCluster(clusterListTable)
+		if found {
+			fmt.Println("Getting credentials for", c.ClusterName)
+		}
+	})
+
+	growBtn.OnClicked(func() {
+		c, found := getSelectedCluster(clusterListTable)
+		if found {
+			fmt.Println("Growing", c.ClusterName)
+		}
 	})
 
 	//Main stack of the interfaces
-	w = ui.NewWindow("Carina by Rackspace GUI Client", 620, 400, mainGrid)
+	w = ui.NewWindow("Carina by Rackspace GUI Client", 620, 300, mainGrid)
 	w.SetMargined(true)
 
 	w.OnClosing(func() bool {
@@ -98,6 +133,7 @@ func connect(endpoint, username, apiKey string) {
 	// Connect to Carina
 	var err error
 	carinaClient, err = libcarina.NewClusterClient(endpoint, username, apiKey)
+	loggedInFlag = true
 	if err != nil {
 		log.Fatal("Cannot create cluster client: ", err)
 	}
@@ -115,6 +151,21 @@ func monitorClusterList(t ui.Table) {
 	}
 }
 
+func getSelectedCluster(table ui.Table) (libcarina.Cluster, bool) {
+	var out libcarina.Cluster
+	found := false
+	c := table.Selected()
+	table.Lock()
+	d := table.Data().(*[]libcarina.Cluster)
+	newC := *d
+	table.Unlock()
+	if c > -1 {
+		out = newC[c]
+		found = true
+	}
+	return out, found
+}
+
 func newCluster() {
 
 	clusterNameLabel := ui.NewLabel("Cluster Name:")
@@ -127,18 +178,12 @@ func newCluster() {
 	newClusterBtn := ui.NewButton("Create Cluster")
 	cancelBtn := ui.NewButton("Cancel")
 
-	newClusterGrid := ui.NewGrid()
+	newClusterGrid := ui.NewSimpleGrid(2,
+		clusterNameLabel, clusterNameTextField,
+		clusterNodeCountLabel, clusterNodeCountTextField,
+		autoscaleLabel, autoscaleCheckbox,
+		newClusterBtn, cancelBtn)
 
-	//	loginGrid.Add(apiEndpointLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
-
-	newClusterGrid.Add(clusterNameLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(clusterNameTextField, clusterNameLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(clusterNodeCountLabel, clusterNameLabel, ui.South, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(clusterNodeCountTextField, clusterNodeCountLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(autoscaleLabel, clusterNodeCountLabel, ui.South, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(autoscaleCheckbox, autoscaleLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
-	newClusterGrid.Add(newClusterBtn, autoscaleLabel, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
-	newClusterGrid.Add(cancelBtn, newClusterBtn, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
 	newClusterGrid.SetPadded(true)
 
 	newClusterGrp := ui.NewGroup("", newClusterGrid)
@@ -147,6 +192,15 @@ func newCluster() {
 	newWin := ui.NewWindow("New Cluster", 400, 300, newClusterGrp)
 	newWin.SetMargined(true)
 	newWin.Show()
+
+	newClusterBtn.OnClicked(func() {
+		var c libcarina.Cluster
+		c.ClusterName = clusterNameTextField.Text()
+		n, _ := strconv.Atoi(clusterNodeCountTextField.Text())
+		c.Nodes = libcarina.Number(n)
+		c.AutoScale = autoscaleCheckbox.Checked()
+		carinaClient.Create(c)
+	})
 
 	cancelBtn.OnClicked(func() {
 		newWin.Close()
