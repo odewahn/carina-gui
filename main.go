@@ -10,6 +10,7 @@ import (
 
 	"github.com/andlabs/ui"
 	"github.com/rackerlabs/libcarina"
+	"github.com/samalba/dockerclient"
 )
 
 var (
@@ -18,7 +19,8 @@ var (
 	loggedInFlag bool
 )
 
-const VERSION string = "0.1.0"
+// VERSION is just a string that will show up in the windowbar
+const VERSION string = "0.2.0"
 
 func gui() {
 
@@ -70,16 +72,43 @@ func gui() {
 	deleteBtn := ui.NewButton("Delete")
 	buttonStack := ui.NewVerticalStack(newBtn, growBtn, rebuildBtn, credentialsBtn, deleteBtn)
 
+	//div grp2
+	divGrp2 := ui.NewGroup("", ui.Space())
+	divGrp2.SetMargined(true)
+
+	//Show containers on the cluster
+	containerListLabel := ui.NewLabel("Containers")
+	var cont dockerclient.Container
+	containerListTable := ui.NewTable(reflect.TypeOf(cont))
+
 	mainGrid := ui.NewGrid()
 	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 12, 1)
 	mainGrid.Add(divGrp1, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 12, 1)
 	mainGrid.Add(clusterListTable, divGrp1, ui.South, true, ui.Fill, false, ui.Center, 9, 1)
 	mainGrid.Add(buttonStack, clusterListTable, ui.East, true, ui.Fill, false, ui.Center, 3, 1)
+	mainGrid.Add(divGrp2, clusterListTable, ui.South, true, ui.Fill, false, ui.Center, 12, 1)
+	mainGrid.Add(containerListLabel, divGrp2, ui.South, true, ui.Fill, false, ui.Center, 12, 1)
+	mainGrid.Add(containerListTable, containerListLabel, ui.South, true, ui.Fill, false, ui.Center, 12, 1)
 	mainGrid.SetPadded(true)
 
 	connectBtn.OnClicked(func() {
 		connect(apiEndpointTextField.Text(), usernameTextField.Text(), apiKeyTextField.Text())
 		go monitorClusterList(clusterListTable)
+	})
+
+	clusterListTable.OnSelected(func() {
+		c, found := getSelectedCluster(clusterListTable)
+		if found {
+			if c.Status == "active" {
+				containers := getContainers(c.ClusterName)
+				containerListTable.Lock()
+				d := containerListTable.Data().(*[]dockerclient.Container)
+				*d = containers
+				containerListTable.Unlock()
+				txt := fmt.Sprintf("%d containers running on %s cluster", len(containers), c.ClusterName)
+				containerListLabel.SetText(txt)
+			}
+		}
 	})
 
 	newBtn.OnClicked(func() {
@@ -149,7 +178,7 @@ func monitorClusterList(t ui.Table) {
 		d := t.Data().(*[]libcarina.Cluster)
 		*d = clusters
 		t.Unlock()
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -202,6 +231,8 @@ func newCluster() {
 		c.Nodes = libcarina.Number(n)
 		c.AutoScale = autoscaleCheckbox.Checked()
 		carinaClient.Create(c)
+		time.Sleep(250 * time.Millisecond)
+		newWin.Close()
 	})
 
 	cancelBtn.OnClicked(func() {
@@ -213,6 +244,19 @@ func newCluster() {
 		return true
 	})
 
+}
+
+//Lists all containers running on a cluster
+func getContainers(clusterName string) []dockerclient.Container {
+	host, tlsConfig, _ := carinaClient.GetDockerConfig(clusterName)
+	// Setup the docker host
+	docker, err := dockerclient.NewDockerClient(host, tlsConfig)
+
+	containers, err := docker.ListContainers(false, false, "")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return containers
 }
 
 func main() {
