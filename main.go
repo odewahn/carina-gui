@@ -49,23 +49,40 @@ func gui() {
 	loginGrid.Add(connectBtn, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
 	loginGrid.SetPadded(true)
 
+	//div grp
+	divGrp1 := ui.NewGroup("", ui.Space())
+	divGrp1.SetMargined(true)
+
 	// Define the table that lists all running clusters
 	var c libcarina.Cluster
 	clusterListTable := ui.NewTable(reflect.TypeOf(c))
 
+	// Create control buttons
+	newBtn := ui.NewButton("New")
+	growBtn := ui.NewButton("Grow")
+	rebuildBtn := ui.NewButton("Rebuild")
+	credentialsBtn := ui.NewButton("Credentials")
+	deleteBtn := ui.NewButton("Delete")
+	buttonStack := ui.NewVerticalStack(newBtn, growBtn, rebuildBtn, credentialsBtn, deleteBtn)
+
 	mainGrid := ui.NewGrid()
-	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
-	mainGrid.Add(clusterListTable, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	mainGrid.Add(loginGrid, nil, ui.East, true, ui.Fill, false, ui.Center, 12, 1)
+	mainGrid.Add(divGrp1, loginGrid, ui.South, true, ui.Fill, false, ui.Center, 12, 1)
+	mainGrid.Add(clusterListTable, divGrp1, ui.South, true, ui.Fill, false, ui.Center, 9, 1)
+	mainGrid.Add(buttonStack, clusterListTable, ui.East, true, ui.Fill, false, ui.Center, 3, 1)
 	mainGrid.SetPadded(true)
 
 	connectBtn.OnClicked(func() {
 		connect(apiEndpointTextField.Text(), usernameTextField.Text(), apiKeyTextField.Text())
 		go monitorClusterList(clusterListTable)
+	})
 
+	newBtn.OnClicked(func() {
+		newCluster()
 	})
 
 	//Main stack of the interfaces
-	w = ui.NewWindow("Carina by Rackspace GUI Client", 600, 450, mainGrid)
+	w = ui.NewWindow("Carina by Rackspace GUI Client", 620, 400, mainGrid)
 	w.SetMargined(true)
 
 	w.OnClosing(func() bool {
@@ -96,6 +113,50 @@ func monitorClusterList(t ui.Table) {
 		t.Unlock()
 		time.Sleep(1 * time.Second)
 	}
+}
+
+func newCluster() {
+
+	clusterNameLabel := ui.NewLabel("Cluster Name:")
+	clusterNameTextField := ui.NewTextField()
+	clusterNodeCountLabel := ui.NewLabel("Number of Nodes:")
+	clusterNodeCountTextField := ui.NewTextField()
+	clusterNodeCountTextField.SetText("1")
+	autoscaleLabel := ui.NewLabel("Autoscale:")
+	autoscaleCheckbox := ui.NewCheckbox("")
+	newClusterBtn := ui.NewButton("Create Cluster")
+	cancelBtn := ui.NewButton("Cancel")
+
+	newClusterGrid := ui.NewGrid()
+
+	//	loginGrid.Add(apiEndpointLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+
+	newClusterGrid.Add(clusterNameLabel, nil, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(clusterNameTextField, clusterNameLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(clusterNodeCountLabel, clusterNameLabel, ui.South, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(clusterNodeCountTextField, clusterNodeCountLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(autoscaleLabel, clusterNodeCountLabel, ui.South, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(autoscaleCheckbox, autoscaleLabel, ui.East, true, ui.LeftTop, false, ui.Center, 1, 1)
+	newClusterGrid.Add(newClusterBtn, autoscaleLabel, ui.South, true, ui.Fill, false, ui.Center, 1, 1)
+	newClusterGrid.Add(cancelBtn, newClusterBtn, ui.East, true, ui.Fill, false, ui.Center, 1, 1)
+	newClusterGrid.SetPadded(true)
+
+	newClusterGrp := ui.NewGroup("", newClusterGrid)
+	newClusterGrp.SetMargined(true)
+
+	newWin := ui.NewWindow("New Cluster", 400, 300, newClusterGrp)
+	newWin.SetMargined(true)
+	newWin.Show()
+
+	cancelBtn.OnClicked(func() {
+		newWin.Close()
+	})
+
+	newWin.OnClosing(func() bool {
+		newWin.Close()
+		return true
+	})
+
 }
 
 func main() {
