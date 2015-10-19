@@ -6,12 +6,12 @@ This project uses [libcarina](https://godoc.org/github.com/rackerlabs/libcarina)
 
 You can download the binary from the release page.
 
-## Building
+## Building (OSX)
 
-See [andlabs/ui](https://github.com/andlabs/ui) for the requirements for your platform to build the compiled binary.
+See [andlabs/ui](https://github.com/andlabs/ui) for more specific requirements for your platform, but on OSX the main thing you need is XCODE and Go 1.5.  Once you have thos, do this:
 
 ```
-GOOS=linux go build -a -installsuffix cgo -o carina-gui .
+GOOS=darwin go build -a -installsuffix cgo -o carina-gui-darwin-amd64 .
 ```
 
-Then, once you build the binary, you have to do `chmod +x rcs-manager` for it to be executable
+Use `chmod +x carina-gui-darwin-amd64` to make it executable.
