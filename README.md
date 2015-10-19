@@ -6,6 +6,10 @@ This project uses [libcarina](https://godoc.org/github.com/rackerlabs/libcarina)
 
 You can download the binary from the release page.
 
+## Credentials
+
+The GUI requires an API endpoint, your Rackspace username, and your API key (available in your user settings).  It will try to use the environment variables `RACKSPACE_API_ENDPOINT`, `RACKSPACE_USERNAME`, and `RACKSPACE_APIKEY` to pre-populate these fields.
+
 ## Building (OSX)
 
 See [andlabs/ui](https://github.com/andlabs/ui) for more specific requirements for your platform, but on OSX the main thing you need is XCODE and Go 1.5.  Once you have thos, do this:
