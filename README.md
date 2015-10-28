@@ -8,7 +8,7 @@ You can download the binary from the release page.
 
 ## Credentials
 
-The GUI requires an API endpoint, your Rackspace username, and your API key (available in your user settings).  It will try to use the environment variables `RACKSPACE_API_ENDPOINT`, `RACKSPACE_USERNAME`, and `RACKSPACE_APIKEY` to pre-populate these fields.
+The GUI requires an API endpoint, your Rackspace username, and your API key (available in your user settings).  It will try to use the environment variables `CARINA_API_ENDPOINT`, `CARINA_USERNAME`, and `CARINA_APIKEY` to pre-populate these fields.
 
 ## Building (OSX)
 

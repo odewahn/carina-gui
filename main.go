@@ -27,21 +27,21 @@ func gui() {
 	//Define endpoint
 	apiEndpointLabel := ui.NewLabel("API Endpoint:")
 	apiEndpointTextField := ui.NewTextField()
-	if len(os.Getenv("RACKSPACE_API_ENDPOINT")) > 0 {
-		apiEndpointTextField.SetText(os.Getenv("RACKSPACE_API_ENDPOINT"))
+	if len(os.Getenv("CARINA_API_ENDPOINT")) > 0 {
+		apiEndpointTextField.SetText(os.Getenv("CARINA_API_ENDPOINT"))
 	} else {
 		apiEndpointTextField.SetText(libcarina.BetaEndpoint)
 	}
 	//Define credentials area
 	usernameLabel := ui.NewLabel("Username:")
 	usernameTextField := ui.NewTextField()
-	if len(os.Getenv("RACKSPACE_USERNAME")) > 0 {
-		usernameTextField.SetText(os.Getenv("RACKSPACE_USERNAME"))
+	if len(os.Getenv("CARINA_USERNAME")) > 0 {
+		usernameTextField.SetText(os.Getenv("CARINA_USERNAME"))
 	}
 	apiKeyLabel := ui.NewLabel("API Key:")
 	apiKeyTextField := ui.NewPasswordField()
-	if len(os.Getenv("RACKSPACE_APIKEY")) > 0 {
-		apiKeyTextField.SetText(os.Getenv("RACKSPACE_APIKEY"))
+	if len(os.Getenv("CARINA_APIKEY")) > 0 {
+		apiKeyTextField.SetText(os.Getenv("CARINA_APIKEY"))
 	}
 	connectBtn := ui.NewButton("Connect")
 
@@ -137,6 +137,7 @@ func gui() {
 		c, found := getSelectedCluster(clusterListTable)
 		if found {
 			fmt.Println("Getting credentials for", c.ClusterName)
+			carinaClient.GetCredentials(c.ClusterName)
 		}
 	})
 
